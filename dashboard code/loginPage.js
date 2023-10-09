@@ -34,10 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loginForm.addEventListener("submit", e => {
         e.preventDefault();
-
+        location.href = "dashboard.html";
         // Perform your AJAX/Fetch login
 
-        setFormMessage(loginForm, "error", "Invalid username/password combination");
+        // setFormMessage(loginForm, "error", "Invalid username/password combination");
+        
     });
 
     document.querySelectorAll(".form__input").forEach(inputElement => {
