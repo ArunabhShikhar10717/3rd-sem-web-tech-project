@@ -1,44 +1,120 @@
 <?php
 
 
+    include('dbConfig.php');
 
-include('dbConfig.php');
-
-
-
-
-if (!isset($_SESSION['USER_ID'])) {
-	header("location:signin.php");
-	die();
-}
+    if (!isset($_SESSION['USER_ID'])) {
+	    header("location:signin.php");
+	    die();
+    }
 
 
+    $user = $_SESSION['USER_NAME'];
+    $query = mysqli_query($conn,"select * from users where username = '$user'");
+    $rowr =mysqli_fetch_array($query);
+    $id = $rowr['id'];
+
+    if (isset($_REQUEST['submit'])) 
+    {
+ 	    $category =   $_REQUEST['category'];
+ 	    $total_expense = $_REQUEST['total_expense'];
+ 	    $issued_date = $_REQUEST['issued_date'];
+ 	    $status = $_REQUEST['status'];
+        mysqli_query($conn,"insert into user_data(category,total_expense,issued_date,status,user_id)value('$category','$total_expense','$issued_date','$status','$id')");
+    }
 
 
+    $selectedOption = 'all';
+    $selectedDate = '';
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["myButton"])) {
+        $selectedOption = 'all';
+        $selectedDate = '';   
+    }
+
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+        if (isset($_POST["inputStatus"])) {
+            $selectedOption = $_POST["inputStatus"];
+        }
+        if (isset($_POST["inputDate"])) {
+            $selectedDate = $_POST["inputDate"];
+        }
+    }   
+
+    $query = "SELECT * FROM user_data WHERE user_id = '$id' ORDER BY issued_date DESC";
+
+    if (!empty($selectedDate)) {
+        $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' ORDER BY issued_date DESC";
+    }
+
+    if ($selectedOption == 'paid') {
+        $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'paid' ORDER BY issued_date DESC";
+        if (!empty($selectedDate)) {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='paid' ORDER BY issued_date DESC";
+        }
+    } elseif ($selectedOption == 'unpaid') {
+        $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'unpaid' ORDER BY issued_date DESC";
+        if (!empty($selectedDate)) {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='unpaid' ORDER BY issued_date DESC";
+        }
+    }
+
+    $query1 = mysqli_query($conn, $query);
+
+    $result = mysqli_num_rows($query1);
 
 
-$user = $_SESSION['USER_NAME'];
-$query = mysqli_query($conn,"select * from users where username = '$user'");
-$rowr =mysqli_fetch_array($query);
-$id = $rowr['id'];
+    $firstDayOfMonth = date('Y-m-01');
+    $lastDayOfMonth = date('Y-m-t');
 
-// echo "$id";
-// echo "Hello hjkhjuvfb ";
-
- if (isset($_REQUEST['submit'])) 
- {
- 	 $category =   $_REQUEST['category'];
- 	 $total_expense = $_REQUEST['total_expense'];
- 	 $issued_date = $_REQUEST['issued_date'];
- 	 $status = $_REQUEST['status'];
-    mysqli_query($conn,"insert into user_data(category,total_expense,issued_date,status,user_id)value('$category','$total_expense','$issued_date','$status','$id')");
- }
+    $query2 = mysqli_query($conn, "SELECT 
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'food' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as total_food_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'food' AND status = 'paid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as paid_food_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'food' AND status = 'unpaid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as unpaid_food_expense");
+    $result2 = mysqli_fetch_assoc($query2);
+    $totalFoodExpense = $result2['total_food_expense'];
+    $paidFoodExpense = $result2['paid_food_expense'];
+    $unpaidFoodExpense = $result2['unpaid_food_expense'];
+    $percentageFoodPaid = $totalFoodExpense != 0 ? ($paidFoodExpense / $totalFoodExpense) * 100 : 0;
+    $percentageFoodUnpaid = $totalFoodExpense != 0 ? ($unpaidFoodExpense / $totalFoodExpense) * 100 : 0;
 
 
+    $query3 = mysqli_query($conn, "SELECT 
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'grocery' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as total_grocery_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'grocery' AND status = 'paid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as paid_grocery_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'grocery' AND status = 'unpaid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as unpaid_grocery_expense");
+    $result3 = mysqli_fetch_assoc($query3);
+    $totalGroceryExpense = $result3['total_grocery_expense'];
+    $paidGroceryExpense = $result3['paid_grocery_expense'];
+    $unpaidGroceryExpense = $result3['unpaid_grocery_expense'];
+    $percentageGroceryPaid = $totalGroceryExpense != 0 ? ($paidGroceryExpense / $totalGroceryExpense) * 100 : 0;
+    $percentageGroceryUnpaid = $totalGroceryExpense != 0 ? ($unpaidGroceryExpense / $totalGroceryExpense) * 100 : 0;
 
 
-$query1 = mysqli_query($conn,"select * from user_data where user_id = '$id'");
-$result = mysqli_num_rows($query1);
+    $query4 = mysqli_query($conn, "SELECT 
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'travels' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as total_travels_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'travels' AND status = 'paid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as paid_travels_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'travels' AND status = 'unpaid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as unpaid_travels_expense");
+    $result4 = mysqli_fetch_assoc($query4);
+    $totalTravelsExpense = $result4['total_travels_expense'];
+    $paidTravelsExpense = $result4['paid_travels_expense'];
+    $unpaidTravelsExpense = $result4['unpaid_travels_expense'];
+    $percentageTravelsPaid = $totalTravelsExpense != 0 ? ($paidTravelsExpense / $totalTravelsExpense) * 100 : 0;
+    $percentageTravelsUnpaid = $totalTravelsExpense != 0 ? ($unpaidTravelsExpense / $totalTravelsExpense) * 100 : 0;
+
+
+    $query5 = mysqli_query($conn, "SELECT 
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'bills' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as total_bill_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'bills' AND status = 'paid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as paid_bill_expense,
+        COALESCE((SELECT SUM(total_expense) FROM user_data WHERE user_id = '$id' AND category = 'bills' AND status = 'unpaid' AND issued_date BETWEEN '$firstDayOfMonth' AND '$lastDayOfMonth'), 0) as unpaid_bill_expense");
+    $result5 = mysqli_fetch_assoc($query5);
+    $totalBillsExpense = $result5['total_bill_expense'];
+    $paidBillsExpense = $result5['paid_bill_expense'];
+    $unpaidBillsExpense = $result5['unpaid_bill_expense'];
+    $percentageBillsPaid = $totalBillsExpense != 0 ? ($paidBillsExpense / $totalBillsExpense) * 100 : 0;
+    $percentageBillsUnpaid = $totalBillsExpense != 0 ? ($unpaidBillsExpense / $totalBillsExpense) * 100 : 0;
+
+
 ?>
 
 
@@ -46,46 +122,52 @@ $result = mysqli_num_rows($query1);
 
 
 <html>
-<style>
-
-    
-</style>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
     <title>Expense Tracker Dashboard</title>
+    <link rel="stylesheet" href="expenseDetailsForm.css">
     <link rel="stylesheet" href="dashboard.css">
-    <link rel="stylesheet"
-        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
 </head>
 
 <body>
-<div class="container">
-                <div id="expenseForm" style="display: none;">
-                    <h2>Expense Details</h2>
-                    <form id="expenseEntryForm" action="#" method="POST">
+
+
+    <div class="container">
+        <div id="expenseForm" style="display: none;">
+            <h2>Expense Details</h2>
+            <form id="expenseEntryForm" action="#" method="POST">
         
-                        <label for="category">Category :</label>
-                        <input type="text" id="category" name="category" required><br><br>
+                <label for="category">Category :</label>
+                <select name="category" id="category" required>
+                    <option value="Food">Food</option>
+                    <option value="Travels">Travels</option>
+                    <option value="Grocery">Grocery</option>
+                    <option value="Bills">Bills</option>
+                    <option value="Others">Others</option>
+                </select><br><br>
         
-                        <label for="totalExpense">Total Expense:</label>
-                        <input type="number" id="total_expense" name="total_expense" required><br><br>
+                <label for="totalExpense">Total Expense:</label>
+                <input type="number" id="total_expense" name="total_expense" required><br><br>
         
-                        <label for="issuedDate">Issued Date:</label>
-                        <input type="date" id="issued_date" name="issued_date" required><br><br>
+                <label for="issuedDate">Issued Date:</label>
+                <input type="date" id="issued_date" name="issued_date" required><br><br>
         
-                        <label for="status">Status:</label>
-                        <select name="status" id="status" required>
-                            <option value="paid">Paid</option>
-                            <option value="unpaid">Unpaid</option>
-                        </select><br><br>
+                <label for="status">Status:</label>
+                <select name="status" id="status" required>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                </select><br><br>
         
-                        <input type="submit" name="submit" value="submit" id="submit">
-                        <input type="button" name="cancel" value="cancel" id="cancel">
-                    </form>
-                </div>
-            </div>
+                <input type="submit" name="submit" value="submit" id="submit">
+                <input type="button" name="cancel" value="cancel" id="cancel">
+            </form>
+        </div>
+    </div>
+
+
     <input type="checkbox" id="menu-toggle">
     <div class="sidebar">
         <div class="side-header">
@@ -171,52 +253,52 @@ $result = mysqli_num_rows($query1);
 
                     <div class="card">
                         <div class="card-head">
-                            <h2>34</h2>
+                            <h3>Rs <?php echo $totalGroceryExpense; ?></h3>
                             <span class="las la-shopping-cart"></span>
                         </div>
                         <div class="card-progress">
                             <small>Grocery Purchases</small>
                             <div class="card-indicator">
-                                <div class="indicator one" style="width: 60%"></div>
+                                <div class="indicator one" style="width: <?php echo $percentageGroceryPaid; ?>%"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-head">
-                            <h2>40</h2>
+                            <h3>Rs <?php echo $totalTravelsExpense; ?></h3>
                             <span class="las la-taxi"></span>
                         </div>
                         <div class="card-progress">
                             <small>Travel</small>
                             <div class="card-indicator">
-                                <div class="indicator two" style="width: 80%"></div>
+                                <div class="indicator two" style="width: <?php echo $percentageTravelsPaid; ?>%"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-head">
-                            <h2>16</h2>
+                            <h3>Rs <?php echo $totalFoodExpense; ?></h3>
                             <span class="las la-beer"></span>
                         </div>
                         <div class="card-progress">
                             <small>Food Purchases</small>
                             <div class="card-indicator">
-                                <div class="indicator three" style="width: 65%"></div>
+                                <div class="indicator three" style="width: <?php echo $percentageFoodPaid; ?>%"></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card">
                         <div class="card-head">
-                            <h2>9</h2>
+                            <h3>Rs <?php echo $totalBillsExpense; ?></h3>
                             <span class="las la-envelope"></span>
                         </div>
                         <div class="card-progress">
                             <small>Monthly Bills</small>
                             <div class="card-indicator">
-                                <div class="indicator four" style="width: 90%"></div>
+                                <div class="indicator four" style="width: <?php echo $percentageBillsPaid; ?>%"></div>
                             </div>
                         </div>
                     </div>
@@ -232,12 +314,17 @@ $result = mysqli_num_rows($query1);
                         </div>
 
                         <div class="browse">
-                            <input type="date" placeholder="Search" class="record-search">
-                            <select name="" id="">
-                                <option value="all">All</option>
-                                <option value="paid">Paid</option>
-                                <option value="unpaid">Unpaid</option>
-                            </select>
+                            <form method="post" action="">
+                                <input type="date" name="inputDate" id="inputDate" onchange="this.form.submit()" class="record-search" value="<?php echo $selectedDate; ?>">
+                                <select name="inputStatus" id="inputStatus" onchange="this.form.submit()">
+                                    <option value="all" <?php echo ($selectedOption === 'all') ? 'selected' : ''; ?>>All</option>
+                                    <option value="paid" <?php echo ($selectedOption === 'paid') ? 'selected' : ''; ?>>Paid</option>
+                                    <option value="unpaid" <?php echo ($selectedOption === 'unpaid') ? 'selected' : ''; ?>>Unpaid</option>
+                                </select>
+                            </form>
+                            <form method="post">
+                                <button type="submit" name="myButton">Clear Filters</button>
+                            </form>
                         </div>
                     </div>
 
@@ -286,180 +373,6 @@ $result = mysqli_num_rows($query1);
                                     </td>
                                 </tr>
                             <?php } ?> 
-                                <!-- <tr>
-                                    <td>#5031</td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h4>Arunabh Shikhar</h4>
-                                                <small>arunabh@gmail.com</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs 300
-                                    </td>
-                                    <td>
-                                        19 April, 2022
-                                    </td>
-                                    <td>
-                                        <span class="paid">Not paid</span>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <span class="lab la-telegram-plane"></span>
-                                            <span class="las la-eye"></span>
-                                            <span class="las la-ellipsis-v"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#5031</td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h4>Arunabh Shikhar</h4>
-                                                <small>arunabh@gmail.com</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs 200
-                                    </td>
-                                    <td>
-                                        19 April, 2022
-                                    </td>
-                                    <td>
-                                        <span class="paid">Not Paid</span>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <span class="lab la-telegram-plane"></span>
-                                            <span class="las la-eye"></span>
-                                            <span class="las la-ellipsis-v"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#5031</td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h4>Arunabh Shikhar</h4>
-                                                <small>arunabh@gmail.com</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs 150
-                                    </td>
-                                    <td>
-                                        19 April, 2022
-                                    </td>
-                                    <td>
-                                        <span class="paid">Not Paid</span>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <span class="lab la-telegram-plane"></span>
-                                            <span class="las la-eye"></span>
-                                            <span class="las la-ellipsis-v"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#5031</td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h4>Arunabh Shikhar</h4>
-                                                <small>arunabh@gmail.com</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs 15,000
-                                    </td>
-                                    <td>
-                                        19 April, 2022
-                                    </td>
-                                    <td>
-                                        -Rs 1500
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <span class="lab la-telegram-plane"></span>
-                                            <span class="las la-eye"></span>
-                                            <span class="las la-ellipsis-v"></span>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <td>#5031</td>
-                                <td>
-                                    <div class="client">
-                                        <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                        </div>
-                                        <div class="client-info">
-                                            <h4>Arunabh Shikhar</h4>
-                                            <small>arunabh@gmail.com</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    Rs 15,000
-                                </td>
-                                <td>
-                                    19 April, 2022
-                                </td>
-                                <td>
-                                    -Rs 1500
-                                </td>
-                                <td>
-                                    <div class="actions">
-                                        <span class="lab la-telegram-plane"></span>
-                                        <span class="las la-eye"></span>
-                                        <span class="las la-ellipsis-v"></span>
-                                    </div>
-                                </td>
-                                </tr>
-                                <tr>
-                                    <td>#5031</td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h4>Arunabh Shikhar</h4>
-                                                <small>arunabh@gmail.com</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs 340
-                                    </td>
-                                    <td>
-                                        19 April, 2022
-                                    </td>
-                                    <td>
-                                        <span class="paid">Not Paid</span>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <span class="lab la-telegram-plane"></span>
-                                            <span class="las la-eye"></span>
-                                            <span class="las la-ellipsis-v"></span>
-                                        </div>
-                                    </td>
-                                </tr> -->
-
                             </tbody>
                         </table>
                     </div>
@@ -475,6 +388,28 @@ $result = mysqli_num_rows($query1);
 
 
 </body>
+
+<script>
+
+    const showExpenseForm = document.getElementById("showExpenseForm");
+    const expenseForm = document.getElementById("expenseForm");
+    const expenseEntryForm = document.getElementById("expenseEntryForm");
+    
+    showExpenseForm.addEventListener("click", () => {
+        showExpenseForm.style.display = "none"; // Hide the button
+        expenseForm.style.display = "block";
+    });
+
+    const hideExpenseForm = () => {
+        showExpenseForm.style.display = "block"; // Show the button
+        expenseForm.style.display = "none";
+        expenseEntryForm.reset();
+    };
+
+    document.getElementById("cancel").addEventListener("click", hideExpenseForm);
+
+</script>
+
 
 
 </html>

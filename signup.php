@@ -1,27 +1,36 @@
-<?php
-include('dbConfig.php');
-$msg="";
-if (isset($_REQUEST['register'])) {
-    $username = $_REQUEST['username'];
-    $password = $_REQUEST['password'];
-    $result = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
-    if (mysqli_num_rows($result) > 0) {
-        $msg="Username already registered!";
-    } else {
-        mysqli_query($conn, "INSERT INTO users(username, password) VALUES('$username', '$password')");
-        $msg="Registration successful!";
+<?php 
+
+
+    include('dbConfig.php');
+
+    $msg="";
+
+    if (isset($_REQUEST['register'])) {
+        $username = $_REQUEST['username'];
+        $password = $_REQUEST['password'];
+        $result = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
+        if (mysqli_num_rows($result) > 0) {
+            $msg="Username already registered!";
+        } else {
+            mysqli_query($conn, "INSERT INTO users(username, password) VALUES('$username', '$password')");
+            $msg="Registration successful!";
+        }
     }
-}
+
+
 ?>
 
 
+
 <html>
+
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
     <title>Sign up form</title>
     <link rel="stylesheet" href="loginPage.css">
 </head>
+
 <body>
     <div class="container">
         <form class="form form--hidden" id="createAccount" action="" method="post">
