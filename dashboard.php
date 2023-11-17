@@ -47,6 +47,37 @@
         $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' ORDER BY issued_date DESC";
     }
 
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["editExpense"])) {
+        if ($selectedOption == 'paid') {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'paid' ORDER BY issued_date DESC";
+            if (!empty($selectedDate)) {
+                $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='paid' ORDER BY issued_date DESC";
+            }
+        } elseif ($selectedOption == 'unpaid') {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'unpaid' ORDER BY issued_date DESC";
+            if (!empty($selectedDate)) {
+                $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='unpaid' ORDER BY issued_date DESC";
+            }
+        }  
+    }
+    
+    
+    
+    if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["deleteExpense"])) {
+        if ($selectedOption == 'paid') {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'paid' ORDER BY issued_date DESC";
+            if (!empty($selectedDate)) {
+                $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='paid' ORDER BY issued_date DESC";
+            }
+        } elseif ($selectedOption == 'unpaid') {
+            $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'unpaid' ORDER BY issued_date DESC";
+            if (!empty($selectedDate)) {
+                $query = "SELECT * FROM user_data WHERE user_id = '$id' AND issued_date = '$selectedDate' AND status='unpaid' ORDER BY issued_date DESC";
+            }
+        }  
+    }
+    
+
     if ($selectedOption == 'paid') {
         $query = "SELECT * FROM user_data WHERE user_id = '$id' AND status = 'paid' ORDER BY issued_date DESC";
         if (!empty($selectedDate)) {
@@ -356,10 +387,12 @@
                                                         ".$result['status']."
                                                     </td>
                                                     <td>
-                                                        <div class=\"actions\">
-                                                            <button class=\"editExpense\"><a href='update_data.php?did=$result[data_id]' onclick='return check_update()'>Update</a></button>
-                                                            <button class=\"deleteExpense\"><a href='delete_data.php?did=$result[data_id]' onclick='return check_delete()'>Delete</a></button>
-                                                        </div>
+                                                        <form method=\"POST\" class=\"editsExpense\">
+                                                            <button type=\"submit\" name=\"editExpense\"><a href='update_data.php?did=$result[data_id]' onclick='return check_update();this.form.submit()'>Update</a></button>
+                                                        </form>
+                                                        <form method=\"POST\" class=\"deletesExpense\">
+                                                            <button type=\"submit\" name=\"deleteExpense\"><a href='delete_data.php?did=$result[data_id]' onclick='return check_delete();this.form.submit()'>Delete</a></button>
+                                                        </form>
                                                     </td>
                                                 </tr>";
                                         }

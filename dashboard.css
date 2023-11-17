@@ -476,6 +476,14 @@ table tbody tr {
     font-size: .8rem;
 }
 
+.editsExpense{
+    display: inline;
+}
+.deletesExpense{
+    display: inline;
+}
+
+
 @media only screen and (max-width: 1200px) {
     .analytics {
         grid-template-columns: repeat(2, 1fr);
