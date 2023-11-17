@@ -59,9 +59,9 @@
         }
     }
 
-    $query1 = mysqli_query($conn, $query);
+    $data = mysqli_query($conn, $query);
 
-    $result = mysqli_num_rows($query1);
+    $total = mysqli_num_rows($data);
 
 
     $firstDayOfMonth = date('Y-m-01');
@@ -192,12 +192,6 @@
                         </a>
                     </li>
                     <li>
-                        <a href="#">
-                            <span class="las la-user-alt"></span>
-                            <small>Profile</small>
-                        </a>
-                    </li>
-                    <li>
                         <a href="contact.php">
                             <span class="las la-tasks"></span>
                             <small>Contact Us</small>
@@ -218,16 +212,6 @@
                 </label>
 
                 <div class="header-menu">
-
-                    <div class="notify-icon">
-                        <span class="las la-envelope"></span>
-                        <span class="notify">4</span>
-                    </div>
-
-                    <div class="notify-icon">
-                        <span class="las la-bell"></span>
-                        <span class="notify">3</span>
-                    </div>
 
                     <div class="user">
                         <div class="bg-img" style="background-image: url(img/1.jpeg)"></div>
@@ -330,50 +314,59 @@
 
                     <div>
                         <table width="100%">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th><span class="las la-sort"></span> CATEGORY</th>
-                                    <th><span class="las la-sort"></span> TOTAL EXPENSE</th>
-                                    <th><span class="las la-sort"></span> ISSUED DATE</th>
-                                    <th><span class="las la-sort"></span> STATUS</th>
-                                    <th><span class="las la-sort"></span> ACTIONS</th>
-                                </tr>
-                            </thead>
-                            <tbody id="expenseTableBody">
-                            <?php 
-                                for($i=1; $i<=$result;$i++){
-                                    $row =  mysqli_fetch_array($query1)
- 	                            ?>
-                                <tr>
-                                    <td>#<?php  echo $row['data_id']?></td>
-                                    <td>
-                                        <div class="client">
-                                            <div class="client-img bg-img" style="background-image: url(img/1.jpeg)">
-                                            </div>
-                                            <div class="client-info">
-                                                <h3><?php  echo $row['category']?></h3>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        Rs <?php  echo $row['total_expense']?>
-                                    </td>
-                                    <td>
-                                        <?php  echo $row['issued_date']?>
-                                    </td>
-                                    <td>
-                                        <?php  echo $row['status']?>
-                                    </td>
-                                    <td>
-                                        <div class="actions">
-                                            <button class="editExpense">Edit</button>
-                                            <button class="deleteExpense">Delete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php } ?> 
-                            </tbody>
+                            <?php
+                                if($total==0){
+                                    // echo "hello";
+                                }
+                                else{
+                                    // $result=mysqli_fetch_assoc($data);
+                                    echo '
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th><span class="las la-sort"></span> CATEGORY</th>
+                                                <th><span class="las la-sort"></span> TOTAL EXPENSE</th>
+                                                <th><span class="las la-sort"></span> ISSUED DATE</th>
+                                                <th><span class="las la-sort"></span> STATUS</th>
+                                                <th><span class="las la-sort"></span> ACTIONS</th>
+                                            </tr>
+                                        </thead> 
+                                        <tbody id="expenseTableBody">';
+                                        while($result=mysqli_fetch_assoc($data)){
+                                            echo "
+                                                <tr>
+                                                    <td>#".$result['data_id']."</td>
+                                                    <td>
+                                                        <div class=\"client\">
+                                                            <div class=\"client-img bg-img\" style=\"background-image: url(img/1.jpeg)\">
+                                                            </div>
+                                                            <div class=\"client-info\">
+                                                                <h3>".$result['category']."</h3>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        Rs 
+                                                        ".$result['total_expense']."
+                                                    </td>
+                                                    <td>
+                                                        ".$result['issued_date']."
+                                                    </td>
+                                                    <td>
+                                                        ".$result['status']."
+                                                    </td>
+                                                    <td>
+                                                        <div class=\"actions\">
+                                                            <button class=\"editExpense\"><a href='update_data.php?did=$result[data_id]' onclick='return check_update()'>Update</a></button>
+                                                            <button class=\"deleteExpense\"><a href='delete_data.php?did=$result[data_id]' onclick='return check_delete()'>Delete</a></button>
+                                                        </div>
+                                                    </td>
+                                                </tr>";
+                                        }
+                                        echo '</tbody>';
+                                }    
+                            ?>
+                            
                         </table>
                     </div>
 
@@ -407,6 +400,14 @@
     };
 
     document.getElementById("cancel").addEventListener("click", hideExpenseForm);
+
+    function check_delete(){
+        return confirm('Are you sure you want to delete this record!');
+    }
+
+    function check_update(){
+        return confirm('Are you sure you want to update this record!');
+    }
 
 </script>
 

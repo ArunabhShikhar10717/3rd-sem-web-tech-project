@@ -4,8 +4,11 @@
     $dbUsername = "root"; 
     $dbPassword = ""; 
     $dbName     = "expense_tracker"; 
-    $conn = new mysqli($dbHost, $dbUsername, $dbPassword, $dbName); 
-    if ($conn->connect_error) { 
-        die("Connection failed: " . $conn->connect_error); 
+    $conn = mysqli_connect($dbHost, $dbUsername, $dbPassword, $dbName); 
+    if ($conn) { 
+        // echo "success";
+    }
+    else{
+        echo "failed.";
     }
 ?>
